@@ -41,6 +41,11 @@ int main(int argc, char *argv[]){
     
     
     int num_received = 0;
+    int num_transmitted = 0;
+
+    double rtt_sum = 0;
+    double rtt_min = -1; 
+    double rtt_max = 0;
 
 
     for (int seq_num = 1; seq_num <= 10; seq_num++)
@@ -54,6 +59,7 @@ int main(int argc, char *argv[]){
 
         snprintf(send_msg, 1204, "PING %d %ld.%06ld",
                  seq_num, start_time.tv_sec, (long)start_time.tv_usec);
+        num_transmitted++;
 
         //need to get the time before the send
         gettimeofday(&start_time, NULL);
@@ -84,7 +90,6 @@ int main(int argc, char *argv[]){
             double rtt = (end_time.tv_sec - start_time.tv_sec) * 1000.0 +
                          (end_time.tv_usec - start_time.tv_usec) / 1000.0;
 
-            //printf("Duration: %.3f ms\n", rtt);
 
 
             res_buffer[server_res] = '\0'; 
@@ -95,11 +100,12 @@ int main(int argc, char *argv[]){
 
             // Update stats
             num_received++;
-            // rtt_sum += rtt;
-            // if (rtt_min == -1 || rtt < rtt_min)
-            //     rtt_min = rtt;
-            // if (rtt > rtt_max)
-            //     rtt_max = rtt;
+            rtt_sum += rtt;
+            
+            if (rtt_min == -1 || rtt < rtt_min)
+                rtt_min = rtt;
+            if (rtt > rtt_max)
+                rtt_max = rtt;
         }
         else if (server_res < 0)
         {
@@ -109,6 +115,18 @@ int main(int argc, char *argv[]){
             
 
         }
+    }
+    printf("--- %s ping statistics ---\n", argv[1]);
+    int lost = num_transmitted - num_received;
+    double loss_rate = (double)lost / num_transmitted * 100.0;
+    double rtt_avg = (num_received > 0) ? (double)rtt_sum / num_received : 0.0;
+
+    if (num_received == 0) {
+        printf("%d packets transmitted, %d received, %.0f%% packet loss\n",
+               num_transmitted, num_received, loss_rate);
+    } else {
+        printf("%d packets transmitted, %d received, %.0f%% packet loss rtt min/avg/max = %.3f %.3f %.3f ms\n",
+               num_transmitted, num_received, loss_rate, rtt_min, rtt_avg, rtt_max);
     }
 
 
