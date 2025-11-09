@@ -110,7 +110,7 @@ int main(int argc, char *argv[]){
         else if (server_res < 0)
         {
             // Timeout
-            printf("Request timeout for: seq#=%d\n",
+            printf("Request timeout for seq#=%d\n",
                    seq_num);
             
 
